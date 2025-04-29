@@ -1,15 +1,8 @@
 <?php
-$conn = new mysqli("localhost", "root", "", "todolist");
+$conn = new mysqli("localhost", "root", "", "todolist_db");
 if ($conn->connect_error) {
     die("Bağlantı hatası: " . $conn->connect_error);
 }
-
-$id = intval($_GET['id']);  // Güvenlik: sadece sayıya izin ver
-
-$result = $conn->query("SELECT * FROM tasks WHERE id = $id");
-$task = $result->fetch_assoc();
-
-$error = "";
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $title = $conn->real_escape_string($_POST["title"]);
@@ -18,23 +11,21 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $due_date = $_POST["due_date"];
 
     $today = date('Y-m-d');
-    if ($due_date < $today) {
+    if ($due_date <= $today) {
         $error = "Lütfen bugünden sonraki bir tarih seçin.";
     } else {
-        $conn->query("UPDATE tasks SET title='$title', category='$category', priority='$priority', due_date='$due_date' WHERE id = $id");
+        $conn->query("INSERT INTO tasks (title, category, priority, due_date) VALUES ('$title', '$category', '$priority', '$due_date')");
         header("Location: index.php");
         exit();
     }
 }
 ?>
 
-<!-- HTML kısmı aynı kalabilir -->
-
 <!DOCTYPE html>
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
-    <title>Görev Düzenle</title>
+    <title>Görev Ekle</title>
     <style>
         body {
             font-family: Arial;
@@ -58,7 +49,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         }
 
         button {
-            background: #2196f3;
+            background: #4caf50;
             color: white;
             padding: 10px 16px;
             border: none;
@@ -79,7 +70,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 </head>
 <body>
     <div class="form-container">
-        <h2>Görevi Düzenle</h2>
+        <h2>Yeni Görev Ekle</h2>
 
         <?php if (!empty($error)): ?>
             <p class="error"><?= $error ?></p>
@@ -87,25 +78,25 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
         <form method="POST">
             <label>Görev Başlığı</label>
-            <input type="text" name="title" value="<?= htmlspecialchars($task['title']) ?>" required>
+            <input type="text" name="title" required>
 
             <label>Kategori</label>
-            <input type="text" name="category" value="<?= htmlspecialchars($task['category']) ?>" required>
+            <input type="text" name="category" placeholder="örneğin: Okul, Alışveriş" required>
 
             <label>Öncelik</label>
             <select name="priority">
-                <option value="Düşük" <?= $task['priority'] == 'Düşük' ? 'selected' : '' ?>>Düşük</option>
-                <option value="Orta" <?= $task['priority'] == 'Orta' ? 'selected' : '' ?>>Orta</option>
-                <option value="Yüksek" <?= $task['priority'] == 'Yüksek' ? 'selected' : '' ?>>Yüksek</option>
+                <option value="Düşük">Düşük</option>
+                <option value="Orta">Orta</option>
+                <option value="Yüksek">Yüksek</option>
             </select>
 
             <label>Teslim Tarihi</label>
-            <input type="date" name="due_date" value="<?= $task['due_date'] ?>" required>
+            <input type="date" name="due_date" required>
 
-            <button type="submit">Kaydet</button>
+            <button type="submit">Görev Ekle</button>
         </form>
 
-        <a href="index.php">← Geri Dön</a>
+        <a href="index.php">← Listeye Dön</a>
     </div>
 </body>
 </html>

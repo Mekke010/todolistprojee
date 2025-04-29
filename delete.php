@@ -1,17 +1,12 @@
 <?php
-// Veritabanı bağlantısını çağırıyoruz
-require_once 'db.php';
-
-// Eğer URL'den "id" bilgisi geldiyse
-if (isset($_GET['id'])) {
-    $id = (int) $_GET['id']; // Gelen id'yi alıyoruz (int'e çevirerek güvenli hale getiriyoruz)
-
-    // Görevi veritabanından sil
-    $sql = "DELETE FROM tasks WHERE id = $id";
-    $conn->query($sql);
+$conn = new mysqli("localhost", "root", "", "todolist");
+if ($conn->connect_error) {
+    die("Bağlantı hatası: " . $conn->connect_error);
 }
 
-// Silme işlemi bitince ana sayfaya geri yönlendir
+$id = intval($_GET['id']);  // Güvenlik: sadece sayı kabul edilir
+$conn->query("DELETE FROM tasks WHERE id = $id");
+
 header("Location: index.php");
 exit();
 ?>
