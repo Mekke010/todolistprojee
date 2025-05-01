@@ -1,4 +1,10 @@
 <?php
+//oturum kontrolü
+session_start();
+if (!isset($_SESSION['user_id'])) {
+    header("Location: login.php");
+    exit();
+}
 $conn = new mysqli("localhost", "root", "", "todolist_db");
 if ($conn->connect_error) {
     die("Bağlantı hatası: " . $conn->connect_error);
@@ -10,12 +16,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $priority = $conn->real_escape_string($_POST["priority"]);
     $due_date = $_POST["due_date"];
 
-    $today = date('Y-m-d');
+    $today = date('D-m-y');
     if ($due_date <= $today) {
         $error = "Lütfen bugünden sonraki bir tarih seçin.";
     } else {
-        $conn->query("INSERT INTO tasks (title, category, priority, due_date) VALUES ('$title', '$category', '$priority', '$due_date')");
-        header("Location: index.php");
+        $conn->query("INSERT INTO tasks (title, category, priority, due_date, user_id) 
+        VALUES ('$title', '$category', '$priority', '$due_date', " . $_SESSION['user_id'] . ")");
+  header("Location: index.php");
         exit();
     }
 }
