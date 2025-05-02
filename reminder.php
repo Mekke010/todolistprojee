@@ -13,7 +13,8 @@ $user_id = $_SESSION['user_id'];
 $todays_date = date('Y-m-d'); // Bugünün tarihi
 
 // Görevleri sorgulayan SQL: Kullanıcının tamamlanmamış görevlerinden, tarihi bugünden küçük (geçmiş) ya da yakın olanları getirir
-$stmt = $conn->prepare("SELECT title, due_date FROM tasks WHERE user_id = ? AND completed = 0 AND due_date IS NOT NULL");
+// Kullanıcının yaklaşan görevlerini al
+$stmt = $conn->prepare("SELECT id, title, due_date FROM tasks WHERE user_id = ? AND is_completed = 0 AND due_date <= DATE_ADD(CURDATE(), INTERVAL 3 DAY)");
 if (!$stmt) {
     die("SQL Hatası: " . $conn->error);
 }
