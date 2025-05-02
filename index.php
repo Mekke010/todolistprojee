@@ -208,7 +208,7 @@ $completedTasks = $conn->query("SELECT * FROM tasks WHERE user_id = $user_id AND
 
 <!-- Ana kutucuk -->
 <div class="container">
-    <h1>Görev Listesi</h1>
+    <h1>📝Görev Listesi</h1>
 
     <!-- Hata mesajı -->
     <?php if (!empty($error)): ?>
