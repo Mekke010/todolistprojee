@@ -1,28 +1,35 @@
 <?php
-//oturum kontrolü
+// Kullanıcı oturum kontrolü
 session_start();
 if (!isset($_SESSION['user_id'])) {
     header("Location: login.php");
     exit();
 }
+
+// Veritabanı bağlantısı
 $conn = new mysqli("localhost", "root", "", "todolist_db");
 if ($conn->connect_error) {
     die("Bağlantı hatası: " . $conn->connect_error);
 }
 
+// Kullanıcının kategorilerini veritabanından çekiyoruz
+$category_result = $conn->query("SELECT id, name FROM categories WHERE user_id = " . $_SESSION['user_id']);
+
+// Görev ekleme işlemi
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $title = $conn->real_escape_string($_POST["title"]);
-    $category = $conn->real_escape_string($_POST["category"]);
+    $category_id = (int)$_POST["category_id"]; // Seçilen kategori ID'si
     $priority = $conn->real_escape_string($_POST["priority"]);
     $due_date = $_POST["due_date"];
 
-    $today = date('D-m-y');
+    $today = date('Y-m-d');
     if ($due_date <= $today) {
         $error = "Lütfen bugünden sonraki bir tarih seçin.";
     } else {
-        $conn->query("INSERT INTO tasks (title, category, priority, due_date, user_id) 
-        VALUES ('$title', '$category', '$priority', '$due_date', " . $_SESSION['user_id'] . ")");
-  header("Location: index.php");
+        // Görevi veritabanına ekle
+        $conn->query("INSERT INTO tasks (title, category_id, priority, due_date, user_id) 
+                      VALUES ('$title', '$category_id', '$priority', '$due_date', " . $_SESSION['user_id'] . ")");
+        header("Location: index.php");
         exit();
     }
 }
@@ -76,34 +83,42 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     </style>
 </head>
 <body>
-    <div class="form-container">
-        <h2>Yeni Görev Ekle</h2>
+<div class="form-container">
+    <h2>Yeni Görev Ekle</h2>
 
-        <?php if (!empty($error)): ?>
-            <p class="error"><?= $error ?></p>
-        <?php endif; ?>
+    <!-- Hatalı tarih girilirse uyarı göster -->
+    <?php if (!empty($error)): ?>
+        <p class="error"><?= $error ?></p>
+    <?php endif; ?>
 
-        <form method="POST">
-            <label>Görev Başlığı</label>
-            <input type="text" name="title" required>
+    <!-- Görev ekleme formu -->
+    <form method="POST">
+        <label>Görev Başlığı</label>
+        <input type="text" name="title" required>
 
-            <label>Kategori</label>
-            <input type="text" name="category" placeholder="örneğin: Okul, Alışveriş" required>
+        <!-- Kategori dropdown olarak geliyor -->
+        <label>Kategori</label>
+        <select name="category_id" required>
+            <option value="">Kategori seçin</option>
+            <?php while ($row = $category_result->fetch_assoc()): ?>
+                <option value="<?= $row['id'] ?>"><?= htmlspecialchars($row['name']) ?></option>
+            <?php endwhile; ?>
+        </select>
 
-            <label>Öncelik</label>
-            <select name="priority">
-                <option value="Düşük">Düşük</option>
-                <option value="Orta">Orta</option>
-                <option value="Yüksek">Yüksek</option>
-            </select>
+        <label>Öncelik</label>
+        <select name="priority">
+            <option value="Düşük">Düşük</option>
+            <option value="Orta">Orta</option>
+            <option value="Yüksek">Yüksek</option>
+        </select>
 
-            <label>Teslim Tarihi</label>
-            <input type="date" name="due_date" required>
+        <label>Teslim Tarihi</label>
+        <input type="date" name="due_date" required>
 
-            <button type="submit">Görev Ekle</button>
-        </form>
+        <button type="submit">Görev Ekle</button>
+    </form>
 
-        <a href="index.php">← Listeye Dön</a>
-    </div>
+    <a href="index.php">← Listeye Dön</a>
+</div>
 </body>
 </html>
